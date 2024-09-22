@@ -17,10 +17,10 @@
  * @license
  */
 
-const { loadImage } = require('canvas');
+const { loadImage } = require("@napi-rs/canvas");
 
-const CanvasImage = require('./canvas-image');
-const { quantize } = require('./mmcq');
+const CanvasImage = require("./canvas-image");
+const { quantize } = require("./mmcq");
 
 /**
  * Use the median cut algorithm provided by quantize.js
@@ -46,43 +46,43 @@ const { quantize } = require('./mmcq');
  * @return {{r: number, g: number, b: number}[]}
  */
 const getPalette = (sourceImage, colorCount = 5, quality = 5) => {
-    if (colorCount < 2 || colorCount > 256) {
-        colorCount = 5;
+  if (colorCount < 2 || colorCount > 256) {
+    colorCount = 5;
+  }
+  if (quality < 1) {
+    quality = 5;
+  }
+
+  // Create custom CanvasImage object.
+  const image = new CanvasImage(sourceImage);
+  const imageData = image.getImageData();
+  const pixels = imageData.data;
+  const pixelCount = image.getPixelCount();
+
+  // Store the RGB values in an array format suitable for quantize function.
+  const pixelArray = [];
+  for (let i = 0, offset, r, g, b, a; i < pixelCount; i += quality) {
+    offset = i * 4;
+    r = pixels[offset + 0];
+    g = pixels[offset + 1];
+    b = pixels[offset + 2];
+    a = pixels[offset + 3];
+    // If pixel is mostly opaque and not white.
+    if (a >= 125) {
+      if (!(r > 250 && g > 250 && b > 250)) {
+        pixelArray.push([r, g, b]);
+      }
     }
-    if (quality < 1) {
-        quality = 5;
-    }
+  }
 
-    // Create custom CanvasImage object.
-    const image = new CanvasImage(sourceImage);
-    const imageData = image.getImageData();
-    const pixels = imageData.data;
-    const pixelCount = image.getPixelCount();
+  // Send array to quantize function which clusters values
+  // using median cut algorithm.
+  const cmap = quantize(pixelArray, colorCount);
+  // If no palette is generated, it is mostly like that
+  // the given image is completely white.
+  const palette = cmap ? cmap.palette() : [[255, 255, 255]];
 
-    // Store the RGB values in an array format suitable for quantize function.
-    const pixelArray = [];
-    for (let i = 0, offset, r, g, b, a; i < pixelCount; i += quality) {
-        offset = i * 4;
-        r = pixels[offset + 0];
-        g = pixels[offset + 1];
-        b = pixels[offset + 2];
-        a = pixels[offset + 3];
-        // If pixel is mostly opaque and not white.
-        if (a >= 125) {
-            if (!(r > 250 && g > 250 && b > 250)) {
-                pixelArray.push([r, g, b]);
-            }
-        }
-    }
-
-    // Send array to quantize function which clusters values
-    // using median cut algorithm.
-    const cmap = quantize(pixelArray, colorCount);
-    // If no palette is generated, it is mostly like that
-    // the given image is completely white.
-    const palette = cmap ? cmap.palette() : [[255, 255, 255]];
-
-    return palette;
+  return palette;
 };
 
 /**
@@ -102,8 +102,8 @@ const getPalette = (sourceImage, colorCount = 5, quality = 5) => {
  * @return {{r: number, g: number, b: number}}
  */
 exports.getColor = (sourceImage, quality) => {
-    const palette = getPalette(sourceImage, 5, quality);
-    return palette[0];
+  const palette = getPalette(sourceImage, 5, quality);
+  return palette[0];
 };
 
 /**
@@ -130,7 +130,7 @@ exports.getColor = (sourceImage, quality) => {
  * @return {Promise<{r: number, g: number, b: number}[]>}
  */
 exports.getPaletteFromURL = async (URL, colorCount, quality) => {
-    return loadImage(URL).then(image => getPalette(image, colorCount, quality));
+  return loadImage(URL).then((image) => getPalette(image, colorCount, quality));
 };
 
 /**
@@ -151,9 +151,9 @@ exports.getPaletteFromURL = async (URL, colorCount, quality) => {
  * @return {Promise<{r: number, g: number, b: number}>}
  */
 exports.getColorFromURL = async (imageURL, quality) => {
-    return loadImage(imageURL).then(image => {
-        const palette = getPalette(image, 5, quality);
-        const dominantColor = palette[0];
-        return dominantColor;
-    });
+  return loadImage(imageURL).then((image) => {
+    const palette = getPalette(image, 5, quality);
+    const dominantColor = palette[0];
+    return dominantColor;
+  });
 };

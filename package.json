@@ -1,6 +1,6 @@
 {
   "name": "color-thief-node",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Color thief reimplementation for Node.js",
   "main": "./src/color-thief.js",
   "scripts": {
@@ -25,9 +25,12 @@
   },
   "homepage": "https://github.com/zicodeng/color-thief-node#readme",
   "dependencies": {
-    "canvas": "^2.5.0"
+    "@napi-rs/canvas": "^0.1.44"
   },
   "devDependencies": {
-    "chalk": "^2.4.1"
+    "chalk": "^4.1.2"
+  },
+  "engines": {
+    "node": ">=14"
   }
 }
